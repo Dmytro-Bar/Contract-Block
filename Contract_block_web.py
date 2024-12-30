@@ -64,10 +64,6 @@ def delete_block_from_db(block_id):
 def index():
     return render_template("index.html")
 
-@app.route("/blocks")
-def blocks():
-    return render_template("blocks.html")
-
 # API для отримання блоків
 @app.route("/api/blocks", methods=["GET"])
 def get_blocks_api():
@@ -117,14 +113,12 @@ def generate_contract_api():
     description = data.get("description", "")
     contract_text = data.get("contractText", "")
 
-    # Логіка генерації договору
     if not contract_text.strip():
         return jsonify({"success": False, "error": "Текст договору порожній"})
 
-    # Створення шаблону на основі тексту та опису
-    generated_contract = f"Краткий опис: {description}\n\n{contract_text}"
-    
-    # Повертаємо створений шаблон
+    # Логіка генерації договору (приклад використання шаблону)
+    generated_contract = f"Краткий опис: {description}\n\n1. {contract_text.replace('\n', '\n2. ')}"
+
     return jsonify({"success": True, "generated_contract": generated_contract})
 
 # Запуск програми
