@@ -8,6 +8,10 @@ Created on Thu Dec 26 15:21:00 2024
 
 from flask import Flask, render_template, request, jsonify
 import sqlite3
+import openai
+
+# Налаштування API OpenAI
+openai.api_key = "HIDDEN_TEXT"
 
 app = Flask(__name__)
 
@@ -83,45 +87,32 @@ def add_block_api():
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Invalid data"})
 
-# API для оновлення блоку
-@app.route("/api/update_block", methods=["POST"])
-def update_block_api():
-    data = request.json
-    block_id = data.get("id")
-    name = data.get("name")
-    text = data.get("text")
-    block_type = data.get("type")
-    if block_id and name and text and block_type:
-        update_block_in_db(block_id, name, text, block_type)
-        return jsonify({"success": True})
-    return jsonify({"success": False, "error": "Invalid data"})
-
-# API для видалення блоку
-@app.route("/api/delete_block", methods=["POST"])
-def delete_block_api():
-    data = request.json
-    block_id = data.get("id")
-    if block_id:
-        delete_block_from_db(block_id)
-        return jsonify({"success": True})
-    return jsonify({"success": False, "error": "Invalid data"})
-
-# API для генерації договору
+# API для генерації договору через ChatGPT
 @app.route("/api/generate_contract", methods=["POST"])
 def generate_contract_api():
     data = request.json
     description = data.get("description", "").strip()
     contract_text = data.get("contractText", "").strip()
 
-    # Перевірка на порожній текст договору
     if not contract_text:
         return jsonify({"success": False, "error": "Текст договору порожній"})
 
-    # Формуємо фінальний текст договору без нумерації
-    generated_contract = f"Краткий опис: {description}\n\n{contract_text}"
+    try:
+        # Запит до ChatGPT
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Ти — помічник для створення договорів."},
+                {"role": "user", "content": f"Опис договору: {description}\n\nТекст договору: {contract_text}\n\nСтвори повний текст договору з логічною структурою та нумерацією пунктів."}
+            ],
+            max_tokens=1500,
+            temperature=0.7
+        )
+        generated_contract = response['choices'][0]['message']['content'].strip()
 
-    # Повертаємо результат
-    return jsonify({"success": True, "generated_contract": generated_contract})
+        return jsonify({"success": True, "generated_contract": generated_contract})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 # Запуск програми
 if __name__ == "__main__":
