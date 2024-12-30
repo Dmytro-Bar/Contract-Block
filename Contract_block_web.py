@@ -110,15 +110,17 @@ def delete_block_api():
 @app.route("/api/generate_contract", methods=["POST"])
 def generate_contract_api():
     data = request.json
-    description = data.get("description", "")
-    contract_text = data.get("contractText", "")
+    description = data.get("description", "").strip()
+    contract_text = data.get("contractText", "").strip()
 
-    if not contract_text.strip():
+    # Перевірка на порожній текст договору
+    if not contract_text:
         return jsonify({"success": False, "error": "Текст договору порожній"})
 
-    # Логіка генерації договору (приклад використання шаблону)
-    generated_contract = f"Краткий опис: {description}\n\n1. {contract_text.replace('\n', '\n2. ')}"
+    # Формуємо фінальний текст договору без нумерації
+    generated_contract = f"Краткий опис: {description}\n\n{contract_text}"
 
+    # Повертаємо результат
     return jsonify({"success": True, "generated_contract": generated_contract})
 
 # Запуск програми
