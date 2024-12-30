@@ -11,7 +11,12 @@ import sqlite3
 import openai
 
 # Налаштування API OpenAI
-openai.api_key = "HIDDEN_TEXT"
+from dotenv import load_dotenv
+import os
+
+# Завантаження змінних із файлу Contract_block.env
+load_dotenv("Contract_block.env")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
 
