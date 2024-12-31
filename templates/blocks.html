@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сторінка блоків</title>
+</head>
+<body>
+    <a href="/"><button>Повернутися на головну</button></a>
+    <h1>Бібліотека блоків</h1>
+    <script>
+        async function loadBlocks() {
+            const response = await fetch('/api/blocks?type=Інше');
+            const blocks = await response.json();
+            const blockList = document.getElementById('blockList');
+            blockList.innerHTML = '';
+            blocks.forEach(block => {
+                const li = document.createElement('li');
+                li.textContent = `${block[1]}: ${block[2]}`;
+                blockList.appendChild(li);
+            });
+        }
+
+        async function addBlock() {
+            const name = document.getElementById('blockName').value;
+            const text = document.getElementById('blockText').value;
+            const type = document.getElementById('blockType').value;
+            const response = await fetch('/api/add_block', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, text, type })
+            });
+            if (response.ok) {
+                alert('Блок додано!');
+                loadBlocks();
+            } else {
+                alert('Помилка!');
+            }
+        }
+    </script>
+</head>
+<body onload="loadBlocks()">
+    <h1>Бібліотека блоків</h1>
+    <select id="blockType">
+        <option value="Інше">Інше</option>
+        <option value="Купівлі-продажу">Купівлі-продажу</option>
+        <option value="Надання послуг">Надання послуг</option>
+        <option value="Оренда">Оренда</option>
+    </select>
+    <ul id="blockList"></ul>
+    <input id="blockName" placeholder="Назва блоку">
+    <textarea id="blockText" placeholder="Текст блоку"></textarea>
+    <button onclick="addBlock()">Додати блок</button>
+</body>
+</html>

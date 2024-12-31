@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор договорів</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+        }
+        #sidebar {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #blockListContainer, #blockDetails {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        #blockListContainer h3, #blockDetails h3, #contractDetails h3 {
+            margin-top: 0;
+        }
+        #blockList {
+            list-style-type: none;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+        }
+        #blockList li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+        }
+        #blockList li:hover {
+            background-color: #f0f0f0;
+        }
+        #blockList li.selected {
+            background-color: #d0f0d0;
+            font-weight: bold;
+        }
+        textarea, input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+        textarea#blockText {
+            height: 250px;
+        }
+        #contractDetails {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        textarea#contractText {
+            height: 350px;
+            margin-bottom: 10px;
+        }
+        textarea#contractDescription {
+            height: 100px;
+        }
+        #contractButtons {
+            display: flex;
+            justify-content: space-between;
+        }
+        select#blockType {
+            width: 50%;
+        }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #666666;
+            color: white;
+            border: none;
+            flex: 1;
+            margin: 0 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body onload="loadBlocks()">
+    <h1>Конструктор договорів</h1>
+
+    <!-- Довідник типу договору -->
+    <div style="margin-bottom: 20px;">
+        <label for="blockType">Довідник тип договору:</label>
+        <select id="blockType" onchange="loadBlocks()">
+            <option value="Інше">Інше</option>
+            <option value="Купівлі-продажу">Купівлі-продажу</option>
+            <option value="Надання послуг">Надання послуг</option>
+            <option value="Оренда">Оренда</option>
+        </select>
+    </div>
+
+    <div id="container">
+        <div id="sidebar">
+            <div id="blockListContainer">
+                <h3>Довідник блоків</h3>
+                <ul id="blockList"></ul>
+            </div>
+            <div id="blockDetails">
+                <h3>Деталі блоку</h3>
+                <input id="blockId" type="hidden">
+                <input id="blockName" placeholder="Назва блоку">
+                <textarea id="blockText" placeholder="Текст блоку"></textarea>
+                <button onclick="addBlock()">Додати новий блок</button>
+                <button onclick="deleteBlock()">Видалити блок</button>
+                <button onclick="saveBlock()">Зберегти зміни</button>
+                <button onclick="addToContract()">Додати в текст договору</button>
+            </div>
+        </div>
+
+        <div id="contractDetails">
+            <h3>Текст договору</h3>
+            <textarea id="contractText" placeholder="Текст договору"></textarea>
+            <textarea id="contractDescription" placeholder="Краткий опис договору"></textarea>
+            <div id="contractButtons">
+                <button onclick="createContract()">Створити договір</button>
+                <button onclick="saveContract()">Зберегти договір</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadBlocks() {
+            const type = document.getElementById('blockType').value;
+            const response = await fetch(`/api/blocks?type=${type}`);
+            if (response.ok) {
+                const blocks = await response.json();
+                const blockList = document.getElementById('blockList');
+                blockList.innerHTML = '';
+                blocks.forEach(block => {
+                    const li = document.createElement('li');
+                    li.textContent = block[1];
+                    li.dataset.id = block[0];
+                    li.onclick = () => {
+                        document.getElementById('blockId').value = block[0];
+                        document.getElementById('blockName').value = block[1];
+                        document.getElementById('blockText').value = block[2];
+                    };
+                    blockList.appendChild(li);
+                });
+            } else {
+                console.error('Помилка завантаження блоків');
+            }
+        }
+
+        async function addBlock() {
+            const name = document.getElementById('blockName').value;
+            const text = document.getElementById('blockText').value;
+            const type = document.getElementById('blockType').value;
+
+            if (!name || !text) {
+                alert('Заповніть всі поля!');
+                return;
+            }
+
+            const response = await fetch('/api/add_block', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, text, type })
+            });
+
+            if (response.ok) {
+                alert('Блок успішно додано!');
+                loadBlocks();
+            } else {
+                alert('Помилка при додаванні блоку.');
+            }
+        }
+
+        async function deleteBlock() {
+            const blockId = document.getElementById('blockId').value;
+            if (!blockId) {
+                alert('Виберіть блок для видалення!');
+                return;
+            }
+
+            const response = await fetch('/api/delete_block', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: blockId })
+            });
+
+            if (response.ok) {
+                alert('Блок видалено!');
+                document.getElementById('blockId').value = '';
+                document.getElementById('blockName').value = '';
+                document.getElementById('blockText').value = '';
+                loadBlocks();
+            } else {
+                alert('Помилка при видаленні блоку.');
+            }
+        }
+
+        async function saveBlock() {
+            const blockId = document.getElementById('blockId').value;
+            const blockName = document.getElementById('blockName').value;
+            const blockText = document.getElementById('blockText').value;
+            const blockType = document.getElementById('blockType').value;
+
+            if (!blockId || !blockName || !blockText) {
+                alert('Заповніть всі поля!');
+                return;
+            }
+
+            const response = await fetch('/api/update_block', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: blockId, name: blockName, text: blockText, type: blockType })
+            });
+
+            if (response.ok) {
+                alert('Зміни збережено!');
+                loadBlocks();
+            } else {
+                alert('Помилка при збереженні змін.');
+            }
+        }
+
+        function addToContract() {
+            const blockText = document.getElementById('blockText').value;
+            if (!blockText) {
+                alert('Немає тексту блоку для додавання в договір!');
+                return;
+            }
+
+            const contractTextArea = document.getElementById('contractText');
+            contractTextArea.value += blockText + '\n\n';
+        }
+
+        async function createContract() {
+            const description = document.getElementById('contractDescription').value;
+            const contractText = document.getElementById('contractText').value;
+
+            if (!contractText.trim()) {
+                alert('Поле "Текст договору" порожнє!');
+                return;
+            }
+
+            const response = await fetch('/api/generate_contract', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description, contractText })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('contractText').value = data.generated_contract;
+                    alert('Договір створено успішно!');
+                } else {
+                    alert('Помилка при створенні договору: ' + data.error);
+                }
+            } else {
+                alert('Помилка з сервером при створенні договору.');
+            }
+        }
+
+        function saveContract() {
+            const contractText = document.getElementById('contractText').value;
+            if (!contractText.trim()) {
+                alert('Текст договору порожній!');
+                return;
+            }
+
+            const blob = new Blob([contractText], { type: 'application/msword' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'договір.doc';
+            a.click();
+        }
+    </script>
+</body>
+</html>
