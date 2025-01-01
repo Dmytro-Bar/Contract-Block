@@ -104,7 +104,7 @@ def generate_contract_api():
 
     try:
         # Запит до ChatGPT
-        response = openai.Completion.create(  # Замінили openai.chat на openai
+        response = openai.chat.Completion.createe(  # Замінили openai.chat на openai
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "Ти — помічник для створення договорів."},
