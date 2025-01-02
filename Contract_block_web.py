@@ -1,21 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Dec 26 15:21:00 2024
-
-@author: dmytrobarabin
-"""
-
 from flask import Flask, render_template, request, jsonify
 import sqlite3
-from dotenv import load_dotenv
-import os
 from openai import OpenAI
+import os
 
-# Завантаження змінних із файлу Contract_block.env
-load_dotenv("Contract_block.env")
+# Отримання API ключа з змінних середовища
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Налаштування API OpenAI
 app = Flask(__name__)
 
 # Ініціалізація бази даних
@@ -102,13 +93,15 @@ def generate_contract_api():
 
     try:
         # Запит до GPT-4 для створення договору
-        response = client.chat.completions.create(model="gpt-4",  # Використовуємо модель GPT-4
-        messages=[
-            {"role": "system", "content": "Ти — помічник для створення договорів."},
-            {"role": "user", "content": f"Опис договору: {description}\n\nТекст договору: {contract_text}\n\nСтвори повний текст договору з логічною структурою та нумерацією пунктів."}
-        ],
-        max_tokens=1500,
-        temperature=0.7)
+        response = client.chat.completions.create(
+            model="gpt-4",  # Використовуємо модель GPT-4
+            messages=[
+                {"role": "system", "content": "Ти — помічник для створення договорів."},
+                {"role": "user", "content": f"Опис договору: {description}\n\nТекст договору: {contract_text}\n\nСтвори повний текст договору з логічною структурою та нумерацією пунктів."}
+            ],
+            max_tokens=1500,
+            temperature=0.7
+        )
         # Отримання результату від GPT-4
         generated_contract = response.choices[0].message.content.strip()
 
