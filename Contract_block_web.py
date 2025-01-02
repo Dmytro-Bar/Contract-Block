@@ -2,15 +2,11 @@ from flask import Flask, render_template, request, jsonify
 import sqlite3
 from openai import OpenAI
 import os
-from dotenv import load_dotenv
 
-# Завантаження змінних із файлу Contract_block.env
-load_dotenv("Contract_block.env")
-
-# Отримання API ключа з змінних середовища
+# Отримання API ключа з Environment Variables
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    raise ValueError("OPENAI_API_KEY не знайдений! Перевірте ваш .env файл або налаштування середовища.")
+    raise ValueError("OPENAI_API_KEY не знайдений! Перевірте ваші налаштування середовища.")
 
 # Налаштування API OpenAI
 client = OpenAI(api_key=api_key)
