@@ -8,16 +8,13 @@ Created on Thu Dec 26 15:21:00 2024
 
 from flask import Flask, render_template, request, jsonify
 import sqlite3
-from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Налаштування API OpenAI
 from dotenv import load_dotenv
 import os
+from openai import OpenAI
 
 # Завантаження змінних із файлу Contract_block.env
 load_dotenv("Contract_block.env")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 
